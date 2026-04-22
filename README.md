@@ -24,6 +24,7 @@ A headless architecture decouples the frontend presentation layer from the backe
 | [Order Management](docs/07-order-management.md) | Order tracking, status polling, fulfillment |
 | [API Reference](docs/08-api-reference.md) | Quick lookup for all endpoints |
 | [Troubleshooting](docs/09-troubleshooting.md) | Common issues and solutions |
+| [Xsolla CLI](docs/10-xsolla-cli.md) | Command-line interface reference |
 
 ## Code Examples
 
