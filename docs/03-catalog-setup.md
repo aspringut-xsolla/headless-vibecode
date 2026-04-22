@@ -370,6 +370,6 @@ For complex configurations or visual editing:
 
 Once your catalog is populated:
 
-1. [Design your webshop](12-webshop-design.md) - Create high-converting UI
+1. [Design your webshop](05-webshop-design.md) - Create high-converting UI
 2. Test purchases in sandbox mode
 3. Configure webhooks for fulfillment

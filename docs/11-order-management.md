@@ -26,7 +26,7 @@ Two approaches: **Webhooks** (recommended) or **Polling**.
 
 ### Method 1: Webhooks (Recommended)
 
-See [Webhooks documentation](06-webhooks.md). Process `order_paid` to know when to fulfill.
+See [Webhooks documentation](10-webhooks.md). Process `order_paid` to know when to fulfill.
 
 ### Method 2: Polling
 

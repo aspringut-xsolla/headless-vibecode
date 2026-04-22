@@ -77,7 +77,7 @@ xsolla catalog list-catalog-bundles --project-id YOUR_PROJECT_ID --json
 **Option A: Manual Creation**
 - Use Publisher Account UI for complex items
 - Use CLI for bulk operations
-- See [Catalog Setup Guide](11-catalog-setup.md)
+- See [Catalog Setup Guide](03-catalog-setup.md)
 
 **Option B: Import from Existing Source**
 - Export from game database
@@ -226,7 +226,7 @@ Build features in this order to enable incremental testing:
 
 ### 4.1 Section Implementation Order
 
-See [Webshop Design Guide](12-webshop-design.md) for detailed specs.
+See [Webshop Design Guide](05-webshop-design.md) for detailed specs.
 
 | Priority | Section | Complexity | Revenue Impact |
 |----------|---------|------------|----------------|

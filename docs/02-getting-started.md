@@ -157,6 +157,6 @@ import 'dotenv/config';
 
 ## Next Steps
 
-1. [Set up Authentication](02-authentication.md) - Configure user login
-2. [Configure Catalog](03-catalog-api.md) - Set up your item catalog
-3. [Implement Cart](04-cart-and-checkout.md) - Build shopping cart functionality
+1. [Set up Authentication](06-authentication.md) - Configure user login
+2. [Configure Catalog](07-catalog-api.md) - Set up your item catalog
+3. [Implement Cart](08-cart-and-checkout.md) - Build shopping cart functionality

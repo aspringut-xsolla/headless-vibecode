@@ -403,7 +403,7 @@ async function purchaseWithCurrency(itemSku: string, currencySku: string) {
 
 ## Next Steps
 
-1. [Set up your catalog](11-catalog-setup.md) with required items
+1. [Set up your catalog](03-catalog-setup.md) with required items
 2. Implement sections in priority order (Featured → Currency → Items)
 3. Configure promotions in Publisher Account
 4. Test full purchase flow in sandbox
