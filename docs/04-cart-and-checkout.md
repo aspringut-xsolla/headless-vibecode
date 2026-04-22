@@ -23,6 +23,8 @@ Server-side operations use Basic Auth:
 Authorization: Basic <base64(project_id:api_key)>
 ```
 
+> **Important**: Cart operations require authentication. Requests without a valid user JWT return `401 Unauthorized`. For guest checkout flows, generate a payment token server-side instead of using the cart API.
+
 ---
 
 ## Cart Operations

@@ -115,6 +115,40 @@ window.open(`https://secure.xsolla.com/paystation4/?token=${token}`);
    - Item may be restricted for user's country
    - Check regional settings
 
+### Items showing with missing data (blank names, no images)
+
+**This is a configuration issue**, not an API problem. Items may have:
+- Empty `name` field (shows as `""`)
+- `null` for `image_url`
+- Empty `description`
+
+**Solutions**:
+
+1. **Configure items fully in Publisher Account**
+   - Add names, descriptions, and images to all items
+
+2. **Implement fallbacks in your UI**
+   ```javascript
+   // Use SKU as fallback for missing name
+   const displayName = item.name || item.sku;
+   
+   // Check for image before rendering
+   {item.image_url ? (
+     <img src={item.image_url} alt={displayName} />
+   ) : (
+     <div className="placeholder-image" />
+   )}
+   ```
+
+3. **Use `can_be_bought` for availability**
+   ```javascript
+   // Correct - use can_be_bought
+   const canPurchase = item.can_be_bought !== false;
+   
+   // Less reliable - is_enabled may not reflect purchase state
+   const enabled = item.is_enabled;
+   ```
+
 ### Prices showing wrong currency
 
 **Solutions**:
@@ -125,6 +159,37 @@ window.open(`https://secure.xsolla.com/paystation4/?token=${token}`);
 ---
 
 ## Cart Issues
+
+### 401 Unauthorized on cart endpoints
+
+**Cause**: Cart API requires user authentication.
+
+**Solutions**:
+
+1. **Ensure user JWT is provided**
+   ```javascript
+   // Cart requires Authorization header
+   const response = await fetch('/api/cart', {
+     headers: {
+       'Authorization': `Bearer ${userToken}`
+     }
+   });
+   ```
+
+2. **Handle unauthenticated users gracefully**
+   ```javascript
+   try {
+     const cart = await api.getCart();
+   } catch (err) {
+     if (err.status === 401) {
+       // User not logged in - show empty cart or login prompt
+       return { items: [], price: { amount: '0', currency: 'USD' } };
+     }
+     throw err;
+   }
+   ```
+
+3. **For guest checkout**, skip the cart API entirely and generate payment tokens directly with item SKUs.
 
 ### Cart is empty after adding items
 
@@ -285,6 +350,51 @@ const claims = decodeJWT(userToken);
 console.log('User ID:', claims.sub);
 console.log('Expires:', new Date(claims.exp * 1000));
 ```
+
+---
+
+## Configuration Issues
+
+### Environment variables not loading
+
+**Symptoms**: `XSOLLA_API_KEY` is undefined, authentication fails
+
+**Solutions**:
+
+1. **Load dotenv at server entry point**
+   ```javascript
+   // Must be first import in your entry file
+   import 'dotenv/config';
+   
+   // Or explicitly:
+   import dotenv from 'dotenv';
+   dotenv.config();
+   ```
+
+2. **Check .env file location**
+   - Must be in project root (same directory as package.json)
+   - File must be named exactly `.env` (no extension)
+
+3. **Verify .env syntax**
+   ```bash
+   # Correct - no quotes needed for simple values
+   XSOLLA_API_KEY=abc123def456
+   
+   # Also correct - quotes for values with spaces
+   WEBHOOK_SECRET="my secret with spaces"
+   
+   # Wrong - no spaces around =
+   XSOLLA_API_KEY = abc123def456
+   ```
+
+### .xsolla.json not found
+
+**Error**: `.xsolla.json not found`
+
+**Solutions**:
+- Create the file in your project root
+- Check working directory when running the server
+- Verify JSON syntax is valid
 
 ---
 

@@ -353,3 +353,50 @@ Response includes:
 | 404 | Resource not found |
 | 422 | Validation error |
 | 429 | Rate limit exceeded |
+
+---
+
+## Implementation Notes
+
+### Handling Missing Item Data
+
+Items returned from the API may have incomplete data. Always implement fallbacks:
+
+| Field | May Be Empty | Fallback |
+|-------|--------------|----------|
+| `name` | Yes (empty string `""`) | Use `sku` as display name |
+| `description` | Yes | Hide description element |
+| `image_url` | Yes (`null`) | Show placeholder image |
+| `price` | Rare | Show "N/A" or hide price |
+
+Example response with minimal data:
+```json
+{
+  "sku": "legendary-dragon-blade-001",
+  "name": "",
+  "description": "",
+  "image_url": null,
+  "price": {
+    "amount": "19.99",
+    "currency": "USD"
+  },
+  "can_be_bought": true
+}
+```
+
+### Purchasability
+
+Use `can_be_bought` (not `is_enabled`) to determine if an item can be purchased:
+
+```javascript
+const canPurchase = item.can_be_bought !== false;
+```
+
+### Unauthenticated Catalog Access
+
+Catalog endpoints work without a user JWT token, but responses won't include:
+- User-specific pricing
+- Personalized promotions
+- Owned item indicators
+
+For guest browsing, simply omit the `Authorization` header.

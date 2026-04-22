@@ -99,12 +99,58 @@ For development and testing, use sandbox mode:
 4. **Rotate API keys periodically** - Generate new keys and update integrations
 5. **Implement rate limiting** - Handle 429 responses gracefully
 
+## Local Configuration
+
+### .xsolla.json
+
+Store project settings in a `.xsolla.json` file at your project root:
+
+```json
+{
+  "version": "1",
+  "default_environment": "dev",
+  "environments": {
+    "dev": {
+      "merchant_id": 123456,
+      "project_id": 789012,
+      "api_base": "https://api.xsolla.com",
+      "login_base": "https://login.xsolla.com",
+      "sandbox": true
+    },
+    "prod": {
+      "merchant_id": 123456,
+      "project_id": 789012,
+      "sandbox": false
+    }
+  }
+}
+```
+
+### Environment Variables
+
+Create a `.env` file for secrets (never commit this file):
+
+```bash
+XSOLLA_API_KEY=your_api_key_here
+XSOLLA_WEBHOOK_SECRET=your_webhook_secret_here
+```
+
+Load environment variables in your server entry point:
+
+```javascript
+import 'dotenv/config';
+```
+
+> **Important**: Add `.env` to your `.gitignore` to prevent committing secrets.
+
 ## Project Setup Checklist
 
 - [ ] Create Publisher Account
 - [ ] Create a project
 - [ ] Generate API key
 - [ ] Note your Merchant ID and Project ID
+- [ ] Create `.xsolla.json` with project settings
+- [ ] Create `.env` with API key (add to `.gitignore`)
 - [ ] Configure webhook URL (HTTPS required)
 - [ ] Set up OAuth 2.0 client for Login (if using auth)
 - [ ] Enable sandbox mode for testing
