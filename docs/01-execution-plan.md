@@ -24,11 +24,22 @@ Before writing code, gather requirements and assess readiness.
 - [ ] Are there existing items in Xsolla, or starting fresh?
 - [ ] What item groups/categories are needed?
 
+#### Branding & Theming
+- [ ] What is the game's name and genre?
+- [ ] Describe the game's visual style (realistic, stylized, pixel art, anime, etc.)?
+- [ ] What is the game's tone (serious/dark, lighthearted, competitive, casual)?
+- [ ] Primary brand colors? (provide hex codes if available)
+- [ ] Secondary/accent colors?
+- [ ] Logo files available? (PNG with transparency, SVG preferred)
+- [ ] Custom fonts used in the game or marketing?
+- [ ] Existing style guide or brand book?
+- [ ] Reference webshops or game stores the user likes?
+- [ ] Any visual elements to avoid (competitor colors, certain imagery)?
+
 #### User Experience Requirements
 - [ ] Authenticated users only, or guest checkout?
 - [ ] Existing authentication system to integrate with?
 - [ ] Design mockups or Figma files available?
-- [ ] Branding guidelines (colors, fonts, logos)?
 
 #### Technical Requirements
 - [ ] Frontend framework preference (React, Vue, vanilla)?
@@ -45,7 +56,9 @@ Before writing code, gather requirements and assess readiness.
 | API key generated | ☐ | Stored securely |
 | Webhook URL configured | ☐ | HTTPS required |
 | Sandbox mode enabled | ☐ | For development |
-| Login project configured | ☐ | If using Xsolla auth |
+| Login project configured | ☐ | Login Project ID (UUID): _______ |
+| Server OAuth 2.0 client created | ☐ | Client ID: _______ |
+| OAuth client secret saved | ☐ | Store in `.env` |
 
 ---
 
@@ -77,7 +90,7 @@ xsolla catalog list-catalog-bundles --project-id YOUR_PROJECT_ID --json
 **Option A: Manual Creation**
 - Use Publisher Account UI for complex items
 - Use CLI for bulk operations
-- See [Catalog Setup Guide](03-catalog-setup.md)
+- See [Catalog Setup Guide](04-catalog-setup.md)
 
 **Option B: Import from Existing Source**
 - Export from game database
@@ -88,15 +101,50 @@ xsolla catalog list-catalog-bundles --project-id YOUR_PROJECT_ID --json
 - Create placeholder items for UI development
 - Replace with real content before launch
 
-### 1.4 Verify Catalog Quality
+### 1.4 Asset Requirements
+
+**Every item in the catalog needs visual assets.** Without images, the shop looks incomplete and unprofessional.
+
+| Asset Type | Recommended Size | Format | Notes |
+|------------|------------------|--------|-------|
+| Item images | 512x512px | PNG/WebP | Transparent background preferred |
+| Bundle images | 1024x512px | PNG/WebP | Show bundle contents or hero art |
+| Currency icons | 128x128px | PNG/SVG | Used throughout UI |
+| Currency package art | 512x512px | PNG/WebP | Stacks or piles of currency |
+| Category icons | 64x64px | PNG/SVG | For navigation tabs |
+| Hero banners | 1920x600px | PNG/JPG | Featured section backgrounds |
+
+**Asset Delivery Options**:
+1. **Hosted by client**: Provide public URLs (CDN recommended)
+2. **Upload to Xsolla**: Use Publisher Account to upload images
+3. **Generate placeholders**: Use placeholder images during development, replace before launch
+
+### 1.5 Publish Items to Storefront
+
+Items created via API are hidden by default. Publish them:
+
+```bash
+# Publish virtual items (requires name/description/prices)
+xsolla catalog update-items --project-id YOUR_PROJECT_ID \
+  --item-sku "item-sku" --sku "item-sku" \
+  --name '{"en":"Item Name"}' --description '{"en":"Description"}' \
+  --prices '[{"amount":0.99,"currency":"USD","is_default":true,"is_enabled":true}]' \
+  --is-show-in-store
+
+# Publish bundles and currency packages
+xsolla catalog unhide-admin-bundle --project-id YOUR_PROJECT_ID --bundle-sku "bundle-sku"
+```
+
+### 1.6 Verify Catalog Quality
 
 For each item, verify:
 - [ ] Name is set (not empty)
 - [ ] Description is meaningful
-- [ ] Image URL is valid and loads
+- [ ] **Image URL is valid and loads** (critical!)
 - [ ] Price is configured (real and/or virtual)
 - [ ] Assigned to at least one group
 - [ ] `can_be_bought` is true
+- [ ] **`is_show_in_store` is true** (required for cart functionality)
 
 ---
 
@@ -162,11 +210,87 @@ src/client/
 
 ---
 
-## Phase 3: Core Feature Implementation
+## Phase 3: Branding & Theming
+
+**Goal**: Establish visual identity that matches the game and appeals to its audience.
+
+See [Branding & Theming Guide](03-branding-theming.md) for comprehensive details.
+
+### 3.1 Gather Brand Assets
+
+Collect from the user:
+- [ ] Logo files (SVG preferred, PNG with transparency)
+- [ ] Color palette (hex codes for primary, secondary, accent, backgrounds)
+- [ ] Typography (font files or Google Font names)
+- [ ] UI elements (buttons, icons, decorative elements from the game)
+- [ ] Screenshots or concept art for reference
+
+### 3.2 Create Theme Configuration
+
+Define CSS variables or theme tokens:
+
+```css
+:root {
+  /* Colors */
+  --color-primary: #...;
+  --color-secondary: #...;
+  --color-accent: #...;
+  --color-background: #...;
+  --color-surface: #...;
+  --color-text: #...;
+  --color-text-muted: #...;
+  
+  /* Typography */
+  --font-heading: 'GameFont', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  
+  /* Spacing & Borders */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+}
+```
+
+### 3.3 Theming Checklist
+
+| Element | Branded | Notes |
+|---------|---------|-------|
+| Header/navigation | ☐ | Logo, game title |
+| Buttons (primary) | ☐ | Brand color, hover states |
+| Buttons (secondary) | ☐ | Outline or muted variant |
+| Cards/containers | ☐ | Background, borders, shadows |
+| Price displays | ☐ | Currency icons, sale colors |
+| Badges (sale, new, popular) | ☐ | Eye-catching but on-brand |
+| Loading states | ☐ | Spinner or skeleton matching theme |
+| Empty states | ☐ | Friendly messaging, game-themed |
+| Footer | ☐ | Legal links, support, branding |
+
+### 3.4 Visual Style Patterns
+
+Based on game genre, suggest appropriate patterns:
+
+| Game Type | Style Suggestions |
+|-----------|-------------------|
+| Fantasy RPG | Ornate borders, parchment textures, gold accents |
+| Sci-Fi | Neon accents, dark backgrounds, tech-inspired UI |
+| Casual/Mobile | Bright colors, rounded corners, playful icons |
+| Competitive | Clean lines, bold typography, team colors |
+| Horror | Dark theme, red accents, distressed textures |
+
+### 3.5 Review with User
+
+- [ ] Present mockup or early build with theming applied
+- [ ] Get feedback on colors, fonts, overall feel
+- [ ] Iterate based on feedback
+- [ ] Get sign-off before proceeding to full implementation
+
+---
+
+## Phase 4: Core Feature Implementation
 
 **Goal**: Build minimum viable webshop functionality.
 
-### 3.1 Implementation Order
+### 4.1 Implementation Order
 
 Build features in this order to enable incremental testing:
 
@@ -182,7 +306,7 @@ Build features in this order to enable incremental testing:
 | 8 | Webhook handling | Server setup | Fulfillment |
 | 9 | User inventory | Webhooks | Post-purchase |
 
-### 3.2 Feature Checklist
+### 4.2 Feature Checklist
 
 #### Catalog & Browsing
 - [ ] Fetch and display all items
@@ -201,6 +325,8 @@ Build features in this order to enable incremental testing:
 - [ ] Display cart total
 - [ ] Persist cart across page refreshes
 - [ ] Handle unauthenticated state gracefully
+- [ ] Cart icon in navigation with item count badge
+- [ ] Both "Add to Cart" and "Buy Now" options for items/bundles
 
 #### Checkout & Payment
 - [ ] Generate payment token (server-side)
@@ -220,13 +346,13 @@ Build features in this order to enable incremental testing:
 
 ---
 
-## Phase 4: Webshop Sections
+## Phase 5: Webshop Sections
 
 **Goal**: Implement high-converting shop layout.
 
-### 4.1 Section Implementation Order
+### 5.1 Section Implementation Order
 
-See [Webshop Design Guide](05-webshop-design.md) for detailed specs.
+See [Webshop Design Guide](06-webshop-design.md) and [Branding & Theming Guide](03-branding-theming.md) for detailed specs.
 
 | Priority | Section | Complexity | Revenue Impact |
 |----------|---------|------------|----------------|
@@ -238,7 +364,7 @@ See [Webshop Design Guide](05-webshop-design.md) for detailed specs.
 | 6 | Starter Bundles | Low | High (new users) |
 | 7 | Offer Chains | High | Medium |
 
-### 4.2 Section Checklist
+### 5.2 Section Checklist
 
 #### Currency Section
 - [ ] Display all currency packages
@@ -266,11 +392,11 @@ See [Webshop Design Guide](05-webshop-design.md) for detailed specs.
 
 ---
 
-## Phase 5: Polish & Optimization
+## Phase 6: Polish & Optimization
 
 **Goal**: Production-ready quality and performance.
 
-### 5.1 UI/UX Polish
+### 6.1 UI/UX Polish
 
 - [ ] Loading skeletons instead of spinners
 - [ ] Optimistic UI updates
@@ -279,21 +405,21 @@ See [Webshop Design Guide](05-webshop-design.md) for detailed specs.
 - [ ] Empty states with CTAs
 - [ ] Mobile touch optimization
 
-### 5.2 Performance
+### 6.2 Performance
 
 - [ ] Image lazy loading
 - [ ] API response caching
 - [ ] Bundle size optimization
 - [ ] Lighthouse score > 90
 
-### 5.3 Error Handling
+### 6.3 Error Handling
 
 - [ ] Network failure recovery
 - [ ] API error messages user-friendly
 - [ ] Retry logic for transient failures
 - [ ] Offline indicator
 
-### 5.4 Analytics Integration
+### 6.4 Analytics Integration
 
 - [ ] Page view tracking
 - [ ] Add to cart events
@@ -302,11 +428,11 @@ See [Webshop Design Guide](05-webshop-design.md) for detailed specs.
 
 ---
 
-## Phase 6: Testing
+## Phase 7: Testing
 
 **Goal**: Verify all flows work correctly.
 
-### 6.1 Sandbox Testing
+### 7.1 Sandbox Testing
 
 | Test Case | Expected Result | Status |
 |-----------|-----------------|--------|
@@ -321,7 +447,7 @@ See [Webshop Design Guide](05-webshop-design.md) for detailed specs.
 | Inventory updated | Purchased items appear | ☐ |
 | Duplicate webhook | Items not double-granted | ☐ |
 
-### 6.2 Test Cards
+### 7.2 Test Cards
 
 | Card Number | Result |
 |-------------|--------|
@@ -329,7 +455,7 @@ See [Webshop Design Guide](05-webshop-design.md) for detailed specs.
 | 4000 0000 0000 0002 | Declined |
 | 4000 0000 0000 0077 | 3D Secure |
 
-### 6.3 Edge Cases
+### 7.3 Edge Cases
 
 - [ ] Empty catalog handling
 - [ ] Item out of stock
@@ -340,11 +466,11 @@ See [Webshop Design Guide](05-webshop-design.md) for detailed specs.
 
 ---
 
-## Phase 7: Launch Preparation
+## Phase 8: Launch Preparation
 
 **Goal**: Ready for production traffic.
 
-### 7.1 Production Configuration
+### 8.1 Production Configuration
 
 - [ ] Switch from sandbox to production
 - [ ] Update API keys to production keys
@@ -352,7 +478,7 @@ See [Webshop Design Guide](05-webshop-design.md) for detailed specs.
 - [ ] Set up monitoring and alerting
 - [ ] Configure CDN for static assets
 
-### 7.2 Security Review
+### 8.2 Security Review
 
 - [ ] API keys not exposed in frontend
 - [ ] Webhook signatures verified
@@ -360,7 +486,7 @@ See [Webshop Design Guide](05-webshop-design.md) for detailed specs.
 - [ ] Input validation on all endpoints
 - [ ] Rate limiting configured
 
-### 7.3 Launch Checklist
+### 8.3 Launch Checklist
 
 - [ ] All test cases passing
 - [ ] Production catalog populated
@@ -375,10 +501,10 @@ See [Webshop Design Guide](05-webshop-design.md) for detailed specs.
 
 | Week | Phase | Deliverables |
 |------|-------|--------------|
-| 1 | Discovery + Setup | Requirements doc, project scaffolding |
-| 2 | Catalog + Core API | Populated catalog, backend API complete |
-| 3 | Frontend Core | Catalog, cart, checkout working |
-| 4 | Sections | Currency, featured, bundles implemented |
+| 1 | Discovery + Branding | Requirements doc, brand assets collected, theme defined |
+| 2 | Technical Setup + Catalog | Project scaffolding, catalog populated with assets |
+| 3 | Core Features | Catalog display, cart, checkout working |
+| 4 | Webshop Sections | Currency, featured, bundles with branding applied |
 | 5 | Polish + Testing | All edge cases handled, sandbox tested |
 | 6 | Launch Prep | Production config, security review |
 
@@ -388,6 +514,8 @@ See [Webshop Design Guide](05-webshop-design.md) for detailed specs.
 
 | Risk | Impact | Mitigation |
 |------|--------|------------|
+| Missing/late brand assets | Webshop looks generic, delays | Request assets in Phase 0, use placeholders |
+| Missing item images | Unprofessional appearance | Block catalog items without images from UI |
 | Empty/incomplete catalog | Can't test UI | Use placeholder data early |
 | Webhook delivery issues | Orders not fulfilled | Implement retry + manual tools |
 | Pay Station popup blocked | Users can't pay | Provide fallback redirect link |

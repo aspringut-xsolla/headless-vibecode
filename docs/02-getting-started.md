@@ -131,8 +131,15 @@ Store project settings in a `.xsolla.json` file at your project root:
 Create a `.env` file for secrets (never commit this file):
 
 ```bash
+# Required for API access
 XSOLLA_API_KEY=your_api_key_here
 XSOLLA_WEBHOOK_SECRET=your_webhook_secret_here
+
+# Required for user authentication (auth by custom ID)
+# Get from Publisher Account → Login → Security → OAuth 2.0
+XSOLLA_LOGIN_PROJECT_ID=your_login_project_uuid
+XSOLLA_OAUTH_CLIENT_ID=your_oauth_client_id
+XSOLLA_OAUTH_CLIENT_SECRET=your_oauth_client_secret
 ```
 
 Load environment variables in your server entry point:

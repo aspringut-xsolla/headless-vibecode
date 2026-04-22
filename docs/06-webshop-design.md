@@ -16,6 +16,112 @@ Show the most compelling offers first, reveal depth as players explore.
 ### 4. Trust Signals
 Clear pricing, no hidden fees, easy refund visibility builds confidence.
 
+### 5. Flexible Purchase Options
+Give players control over how they buy - immediate checkout or cart-based shopping.
+
+---
+
+## Navigation & Cart
+
+### Header Layout
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  [LOGO] Webshop    [Sandbox]    [username]  [Shop] [🛒3] [Inv] │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Required Elements:**
+- **Logo/Title**: Clickable, returns to shop home
+- **Environment Badge**: Shows "Sandbox" in development
+- **User Info**: Current username with logout option
+- **Navigation Tabs**: Shop, Cart (with item count badge), Inventory
+
+### Cart Icon
+The cart icon displays:
+- Shopping cart SVG icon
+- Badge with item count (when > 0)
+- Badge uses error color (red) for visibility
+
+```typescript
+export function CartIcon() {
+  const { itemCount } = useCart();
+  return (
+    <span className="cart-icon">
+      <svg>...</svg>
+      {itemCount > 0 && <span className="cart-badge">{itemCount}</span>}
+    </span>
+  );
+}
+```
+
+---
+
+## Purchase Flow Options
+
+Every purchasable item should offer **two options**:
+
+| Button | Action | Best For |
+|--------|--------|----------|
+| **Add to Cart** | Adds item to cart for later checkout | Browsing, multiple items |
+| **Buy Now** | Immediate checkout for single item | Impulse purchases, currency |
+
+### When to Show Each
+
+| Section | Add to Cart | Buy Now | Rationale |
+|---------|-------------|---------|-----------|
+| Currency Packages | No | Yes | Currency is always immediate |
+| Featured Items | Optional | Yes | Hero offers should be quick |
+| Bundles | Yes | Yes | Both options valuable |
+| Item Catalog | Yes | Yes | Full flexibility |
+
+### Button Layout
+```
+┌─────────────────┐
+│    [Image]      │
+│    Item Name    │
+│    $9.99        │
+│ ┌─────┐ ┌─────┐ │
+│ │Cart │ │ Buy │ │
+│ └─────┘ └─────┘ │
+└─────────────────┘
+```
+
+### Implementation
+```typescript
+// Shop component receives both handlers
+interface ShopProps {
+  onAddToCart: (item: CatalogItem | Bundle) => void;
+  onBuyNow: (item: CatalogItem | Bundle | CurrencyPackage) => void;
+}
+
+// Item card with both buttons
+<div className="item-actions">
+  <button className="add-to-cart-btn" onClick={() => onAddToCart(item)}>
+    Add to Cart
+  </button>
+  <button className="buy-now-btn" onClick={() => onBuyNow(item)}>
+    Buy Now
+  </button>
+</div>
+```
+
+### Styling
+```css
+.item-actions,
+.bundle-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.add-to-cart-btn {
+  background: var(--primary);  /* Indigo */
+}
+
+.buy-now-btn {
+  background: var(--success);  /* Green */
+}
+```
+
 ---
 
 ## Recommended Section Order
@@ -285,15 +391,15 @@ After purchasing Bundle A, unlock Bundle B at a discount:
 │                                                             │
 │  Sort: [Popular ▼]                    Filter: [In Stock ▼] │
 ├─────────────────────────────────────────────────────────────┤
-│  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐        │
-│  │[Image]  │  │[Image]  │  │[Image]  │  │[Image]  │        │
-│  │Flame    │  │Dragon   │  │Health   │  │Shadow   │        │
-│  │Sword    │  │Shield   │  │Potion   │  │Skin     │        │
-│  │         │  │         │  │         │  │         │        │
-│  │500 💎   │  │450 💎   │  │$0.99    │  │$9.99    │        │
-│  │or $4.99 │  │or $3.99 │  │or 100🪙 │  │         │        │
-│  │[BUY]    │  │[BUY]    │  │[BUY]    │  │[BUY]    │        │
-│  └─────────┘  └─────────┘  └─────────┘  └─────────┘        │
+│  ┌───────────┐  ┌───────────┐  ┌───────────┐  ┌───────────┐  │
+│  │ [Image]   │  │ [Image]   │  │ [Image]   │  │ [Image]   │  │
+│  │ Flame     │  │ Dragon    │  │ Health    │  │ Shadow    │  │
+│  │ Sword     │  │ Shield    │  │ Potion    │  │ Skin      │  │
+│  │           │  │           │  │           │  │           │  │
+│  │ 500 💎    │  │ 450 💎    │  │ $0.99     │  │ $9.99     │  │
+│  │ or $4.99  │  │ or $3.99  │  │ or 100🪙  │  │           │  │
+│  │[Cart][Buy]│  │[Cart][Buy]│  │[Cart][Buy]│  │[Cart][Buy]│  │
+│  └───────────┘  └───────────┘  └───────────┘  └───────────┘  │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -349,7 +455,7 @@ async function purchaseWithCurrency(itemSku: string, currencySku: string) {
 │  │                      Total Value: $29.99             │  │
 │  │  $̶2̶9̶.̶9̶9̶  $19.99     You Save: 33%                  │  │
 │  │                                                      │  │
-│  │  [ADD TO CART]                                       │  │
+│  │  [ADD TO CART]  [BUY NOW]                            │  │
 │  └──────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -363,7 +469,8 @@ async function purchaseWithCurrency(itemSku: string, currencySku: string) {
 - Adequate spacing between interactive elements
 
 ### Scroll Behavior
-- Sticky header with cart icon
+- Sticky header with cart icon and item count badge
+- Cart always accessible via navigation
 - Horizontal scroll for offer rows
 - Pull-to-refresh for time-sensitive content
 
@@ -392,11 +499,13 @@ async function purchaseWithCurrency(itemSku: string, currencySku: string) {
 - [ ] All prices clearly displayed
 - [ ] Discount savings shown in absolute and percentage
 - [ ] Countdown timers on limited offers
-- [ ] One-click purchase for logged-in users
-- [ ] Cart accessible from any section
+- [ ] Both "Add to Cart" and "Buy Now" options on items/bundles
+- [ ] Cart icon visible in header with item count badge
+- [ ] Cart accessible from any section via navigation
 - [ ] Loading states don't block interaction
 - [ ] Error messages are actionable
 - [ ] Success feedback is immediate and satisfying
+- [ ] Notification when items added to cart
 - [ ] Cross-sell prompts after purchase
 
 ---

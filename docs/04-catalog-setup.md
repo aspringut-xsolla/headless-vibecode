@@ -325,6 +325,7 @@ xsolla catalog list-catalog-groups --project-id 305100 --json | jq '.groups | le
 - [ ] At least 2 bundles with discounted prices
 - [ ] Item groups for navigation
 - [ ] Mix of real-money and virtual-currency pricing
+- [ ] **All items published** (`is_show_in_store: true`) - required for cart functionality
 
 ---
 
@@ -351,6 +352,112 @@ xsolla catalog update-items --project-id 305100 \
 
 ---
 
+## Publishing Items to Storefront
+
+**Important**: Items created via the API are NOT visible to users by default. They must be "published" (set `is_show_in_store: true`) to appear in the storefront catalog and work with user-authenticated APIs like the cart.
+
+### Why This Matters
+
+| API Type | Sees Unpublished Items? | Use Case |
+|----------|------------------------|----------|
+| Admin API (Basic Auth) | Yes | Server-side catalog management |
+| User API (Bearer token) | No | Client-side browsing, cart, purchases |
+
+If your webshop fetches items via admin API but users can't add them to cart, the items likely aren't published.
+
+### Publishing Virtual Items
+
+Virtual items require name, description, and prices when updating:
+
+```bash
+xsolla catalog update-items --project-id 305100 \
+  --item-sku "health-potion" \
+  --sku "health-potion" \
+  --name '{"en":"Health Potion"}' \
+  --description '{"en":"Restores 50 HP instantly"}' \
+  --prices '[{"amount":0.99,"currency":"USD","is_default":true,"is_enabled":true}]' \
+  --is-show-in-store
+```
+
+### Publishing Bundles and Currency Packages
+
+Use the `unhide-admin-bundle` command:
+
+```bash
+# Publish a bundle
+xsolla catalog unhide-admin-bundle --project-id 305100 --bundle-sku starter-bundle
+
+# Publish a currency package (same command - they're bundle types internally)
+xsolla catalog unhide-admin-bundle --project-id 305100 --bundle-sku gems-100
+```
+
+To hide an item from the store:
+
+```bash
+xsolla catalog hide-admin-bundle --project-id 305100 --bundle-sku flash-sale-bundle
+```
+
+### Bulk Publish All Items
+
+Publish all virtual items in one script:
+
+```bash
+# Get all item SKUs and publish each
+xsolla catalog list-items --project-id 305100 --json | \
+  jq -r '.data.items[] | select(.is_show_in_store == false) | .sku' | \
+  while read sku; do
+    echo "Publishing $sku..."
+    # Note: update-items requires name/description/prices - fetch current values first
+    xsolla catalog get-items --project-id 305100 --sku "$sku" --json | \
+      jq -r '"\(.data.name | @json)\t\(.data.description | @json)\t\(.data.prices | @json)"' | \
+      while IFS=$'\t' read name desc prices; do
+        xsolla catalog update-items --project-id 305100 \
+          --item-sku "$sku" --sku "$sku" \
+          --name "$name" --description "$desc" --prices "$prices" \
+          --is-show-in-store
+      done
+  done
+```
+
+### Verification
+
+Verify items are visible in the storefront:
+
+```bash
+# These should return the same count if all items are published
+echo "Admin API count:"
+xsolla catalog list-items --project-id 305100 --json | jq '.data.items | length'
+
+echo "Storefront API count:"
+xsolla catalog list-catalog-items --project-id 305100 --json | jq '.data.items | length'
+```
+
+---
+
+## Image Requirements
+
+**Important**: The `image_url` must be a publicly accessible URL. Xsolla does not host arbitrary images when set via API.
+
+**Options for hosting images:**
+1. **Your CDN** - Upload to S3, CloudFront, or similar
+2. **Placeholder services** - For development, use `https://placehold.co/512x512/bgColor/textColor?text=Label`
+3. **Publisher Account** - Upload directly through the UI (Xsolla will host)
+
+**Recommended sizes:**
+| Item Type | Size |
+|-----------|------|
+| Virtual items | 512x512px |
+| Currency packages | 512x512px |
+| Bundles | 512x512px or 1024x512px |
+| Currency icon | 128x128px |
+
+**API endpoints for updating images:**
+- Virtual items: `PUT /admin/items/virtual_items/sku/{sku}`
+- Bundles: `PUT /admin/items/bundle/sku/{sku}`
+- Currency packages: `PUT /admin/items/virtual_currency/package/sku/{sku}`
+
+---
+
 ## Publisher Account UI
 
 For complex configurations or visual editing:
@@ -359,7 +466,7 @@ For complex configurations or visual editing:
 2. Select your project
 3. Navigate to **Store** → **Virtual Items** / **Virtual Currency** / **Bundles**
 4. Use the visual editor for:
-   - Uploading images
+   - Uploading images (Xsolla-hosted)
    - Setting regional prices
    - Configuring purchase limits
    - Creating complex promotions
